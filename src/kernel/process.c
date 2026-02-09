@@ -1,5 +1,3 @@
-#define LOG_LEVEL LOG_DEBUG
-
 #include "process.h"
 
 #include "kernel.h"
@@ -93,7 +91,8 @@ int process_load_path(struct process *p, const char *cwd, const char *path)
             // TODO: set flags appropriately for ELF segment
 
             /* Load. */
-        TODO();
+        res = elf_load_seg32(&p->execfile, &phdr);
+        if (res < 0) goto error;
     }
 
     return 0;
@@ -156,9 +155,11 @@ int process_start(struct process *p, int argc, char *argv[])
     switch (start_strat) {
     case PSTART_CALL: {
         /* Start process via simple function call. */
-        UNUSED(p), UNUSED(argc), UNUSED(argv);
-        TODO();
-        return -ENOTSUP;
+        main_fn *entry = (void *) p->start_addr;
+        pr_info("%s: calling to %p to start ...\n", argv[0], entry);
+        int res = entry(argc, argv);
+        pr_info("%s: returned %d\n", argv[0], res);
+        return res;
     }
     };
 

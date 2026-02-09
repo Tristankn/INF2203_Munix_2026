@@ -131,8 +131,25 @@ int elf_read_phdr32(
 
 int elf_load_seg32(struct file *f, Elf32_Phdr *phdr)
 {
-    UNUSED(f), UNUSED(phdr);
-    TODO();
-    return -ENOTSUP;
+    int res;
+
+    res = file_lseek(f, phdr->p_offset, SEEK_SET);
+    if (res < 0) return res;
+
+    unsigned char *vaddr = (void *) phdr->p_vaddr;
+    unsigned char *vpos  = vaddr;
+    unsigned char *fend  = vaddr + phdr->p_filesz;
+    unsigned char *mend  = vaddr + phdr->p_memsz;
+
+    /* Copy from file. */
+    while (vpos < fend) {
+        vpos += res = file_read(f, vpos, fend - vpos);
+        if (res < 0) return res;
+    }
+
+    /* Zero fill to 'p_memsz'. */
+    memset(vpos, 0, mend - vpos);
+
+    return 0;
 }
 

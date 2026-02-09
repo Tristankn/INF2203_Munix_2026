@@ -114,6 +114,35 @@ int read_boot_info(struct boot_info *b)
             break;
         }
 
+        case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
+            struct multiboot_tag_framebuffer *fb = (void *) tag;
+            pr_info("tag: framebuffer: "
+                    "addr=%#llx, pitch=%u, width=%u, height=%u, bpp=%u, "
+                    "type=%u\n",
+                    fb->common.framebuffer_addr, fb->common.framebuffer_pitch,
+                    fb->common.framebuffer_width,
+                    fb->common.framebuffer_height, fb->common.framebuffer_bpp,
+                    fb->common.framebuffer_type);
+
+            if (fb->common.framebuffer_type
+                == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
+                b->text_fb_addr =
+                        (void *) (uintptr_t) fb->common.framebuffer_addr;
+                b->text_fb_width  = fb->common.framebuffer_width;
+                b->text_fb_height = fb->common.framebuffer_height;
+            }
+            break;
+        }
+
+        case MULTIBOOT_TAG_TYPE_MODULE: {
+            struct multiboot_tag_module *mod = (void *) tag;
+            pr_info("tag: module: start=%#x, end=%#x, cmdline=\"%s\"\n",
+                    mod->mod_start, mod->mod_end, (char *) mod + 1);
+            b->initrd_addr = (void *) (uintptr_t) mod->mod_start;
+            b->initrd_size = mod->mod_end - mod->mod_start;
+            break;
+        }
+
         default:
             pr_info("tag: type %2u (size %4u)\n", tag->type, tag->size);
             break;
