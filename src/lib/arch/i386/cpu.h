@@ -93,4 +93,33 @@ long syscall_dispatch(
         ureg_t arg5
 );
 
+_Noreturn void cpu_fresh_stack(void (*fn)(void), uintptr_t kstack);
+
+struct cpu_task_save {
+    /* TODO: Decide what state to save in struct */
+};
+
+ATTR_RETURNS_TWICE int cpu_task_save(struct cpu_task_save *save_state);
+_Noreturn int cpu_task_restore(struct cpu_task_save *save_state, int status);
+
+typedef uint64_t cputick_t;
+
+/** Read the CPU time stamp counter (CPU clock ticks) */
+static inline cputick_t cpu_ticks(void)
+{
+    cputick_t tsc;
+
+    /* RDTSC reads a 64-bit timestamp counter into EDX:EAX (high bits in EDX,
+     * low bits in EAX).
+     *
+     * The "A" operand constraint is specifically for this register
+     * configuration on x86-32.
+     *
+     * Note that if/when we move to x86-64, this will need to be changed.
+     * See <https://gcc.gnu.org/onlinedocs/gcc/Machine-Constraints.html> */
+    asm inline volatile("rdtsc" : "=A"(tsc));
+
+    return tsc;
+}
+
 #endif /* CPU_X86_H */

@@ -79,6 +79,12 @@
 //#define EWOULDBLOCK      17 ///< Operation would block (may be the same value as [EAGAIN]).
 ///@}
 
+/** @name POSIX: Process Control */
+///@{
+#define ECHILD           18 ///< No child processes.
+#define ESRCH            19 ///< No such process.
+///@}
+
 /** @name POSIX: I/O: General */
 ///@{
 #define EIO              20 ///< I/O error.

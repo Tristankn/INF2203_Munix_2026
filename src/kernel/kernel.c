@@ -3,6 +3,7 @@
 #include "kshell.h"
 #include "pagemap.h"
 
+#include <abi.h>
 #include <boot.h>
 #include <cpu.h>
 
@@ -53,7 +54,7 @@ static int mount_initrd(void)
     return 0;
 }
 
-_Noreturn void kernel_noreturn(void)
+static _Noreturn void kernel_noreturn_inner(void)
 {
     pr_info("control reached a dead end in kernel, dropping to shell\n");
     for (;;) {
@@ -61,6 +62,15 @@ _Noreturn void kernel_noreturn(void)
         log_result(res, "kshell returned\n");
     }
 }
+
+_Noreturn void kernel_noreturn(void)
+{
+    /* Restart with a fresh shell on fresh stack. */
+    cpu_fresh_stack(kernel_noreturn_inner, KSTACK_DFLT);
+}
+
+int init_int_controller(void);
+int init_timer_interrupt(void);
 
 int kernel_main(void)
 {
@@ -74,8 +84,10 @@ int kernel_main(void)
 
     /* Init CPU and memory. */
     init_cpu();
-    // TODO: Initialize Page Map subsystem
-    //init_pm();
+    init_pm();
+
+    // TODO: Initialize timer interrupt
+    //init_timer_interrupt();
 
     /* Init more essential drivers. */
     init_driver_ramdisk();

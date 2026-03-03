@@ -22,7 +22,8 @@ typedef unsigned char ivec_t; ///< CPU Interrupt Vector
  */
 enum ivec {
     IVEC_PF = 14, ///< \#PF - Page Fault
-    IVEC_USER_START = 32, ///< start of vectors available to the OS
+    IVEC_USER_START = 32, ///< Start of vectors available to the OS
+    IVEC_IRQ_0 = 32, ///< Start of IRQ vectors
     IVEC_SYSCALL = 48, ///< Interrupt vector for syscalls
 };
 

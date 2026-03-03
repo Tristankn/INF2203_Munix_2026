@@ -4,7 +4,11 @@
 
 _Noreturn void _exit(int status)
 {
+#if __linux__
+    syscall(__NR_exit_group, status);
+#elif __munix__
     syscall(SYS_exit, status);
+#endif
 
     /* If the syscall fails, attempt to cause an exception. */
 #pragma GCC diagnostic push

@@ -21,36 +21,30 @@ out/%/Makefile: src/configure
 # ======================================================================
 
 test: | out/$(host)/Makefile
-	make -C out/$(host) test processes
+	$(MAKE) -C out/$(host) test processes
 
 # Creating Image for Target
 # ======================================================================
 
 image: | out/$(target)/Makefile
-	make -C out/$(target) image
+	$(MAKE) -C out/$(target) image
 
 run: | out/$(target)/Makefile
-	make -C out/$(target) run
+	$(MAKE) -C out/$(target) run
 
 debug: | out/$(target)/Makefile
-	make -C out/$(target) debug
+	$(MAKE) -C out/$(target) debug
 
 # Tags and IDE Configuration
 # ======================================================================
 
 # ctags database for old-school editors like vim
 tags: $(shell find src/ -type f)
-	if which ctags > /dev/null; \
-		then ctags -R src/; \
-		else echo "ctags is not installed"; \
-	fi
+	ctags -R src/ || true
 
 # Compilation Database for clang/LSP/VSCode
-compile_commands.json: $(shell find src/ -type f)
-	if which bear > /dev/null; \
-		then bear -- $(MAKE) -B image; \
-		else echo "bear is not installed"; \
-	fi
+compile_commands.json: $(shell find src/ -type f) | out/$(target)/Makefile
+	bear -- $(MAKE) -B -C out/$(target) image || true
 
 # Documentation
 # ======================================================================

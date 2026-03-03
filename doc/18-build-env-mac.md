@@ -61,7 +61,7 @@ to build.
 
 ```py
 # Cross compiler and emulator
-brew install i686-elf-gcc i386-elf-gdb i686-elf-grub qemu
+brew install make i686-elf-gcc i386-elf-gdb i686-elf-grub qemu
 
 # Optional tools for generating HTML documentation
 brew install doxygen graphviz
@@ -69,6 +69,40 @@ brew install doxygen graphviz
 # Optional tools for configuring your editor
 brew install ctags bear
 ```
+
+### 'make' vs 'gmake'
+
+The Xcode Command Line tools include GNU Make,
+but their version is a little out of date (version 3.81 as of February 2026).
+Our build system requires version 4.3 or later.
+
+Homebrew will install an up-to-date version of
+Make (version 4.4 as of February 2026),
+but it will install it as `gmake`.
+
+You can use it as `gmake`, just remember that any time our build
+instructions tell you to `make` something, type `gmake` instead.
+
+```py
+# Use 'gmake' instead of 'make' when building.
+gmake image
+```
+
+Alternately, you can
+[adjust your `PATH`](https://formulae.brew.sh/formula/make)
+so that this version is used for `make`, without the `g`:
+
+```py
+# Run this each session, or add it to your shell's startup script
+# (e.g. .bashrc or .zshenv), after the Homebrew setup.
+export PATH="$HOMEBREW_PREFIX/opt/make/libexec/gnubin:$PATH"
+
+# Now you can use 'make'
+make image
+```
+
+For more details on why we need Make 4.3 or later,
+see the [Build FAQ](19-build-faq.md).
 
 Building the OS
 ----------------------------------------------------------------------

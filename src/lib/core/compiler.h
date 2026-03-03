@@ -173,7 +173,7 @@
 
 /**
  * Make this function easier to call from hand-written asm.
-
+ *
  * This macro expands to function attributes that make the function easy
  * to call from hand-written assembly. It will save all registers that it
  * uses and it will use general purpose registers only.
@@ -189,6 +189,26 @@
 #define ATTR_EASY_ASM_CALL \
     __attribute__((no_caller_saved_registers)) \
     __attribute__((target("general-regs-only")))
+
+///@}
+
+/** @name Other function attributes */
+///@{
+
+/**
+ * This function is a save point that code might resume from
+ *
+ * This attribute is useful for functions like `setjmp`, which saves a state
+ * that is later restored. When the program calls the matching `longjmp`,
+ * control does not return from `longjmp`. Instead, it returns from the saved
+ * state in `setjmp` for a second time. Hence, `longjmp` is `noreturn` and
+ * `setjmp` is `returns_twice`.
+ *
+ * @see
+ *
+ * - [GCC's `returns_twice` attribute]( https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-returns_005ftwice-function-attribute)
+ */
+#define ATTR_RETURNS_TWICE __attribute__((returns_twice))
 
 ///@}
 

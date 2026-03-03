@@ -52,6 +52,11 @@ static const char *known_constant(int errnum)
     //case EALREADY:        return "EALREADY";
     //case EWOULDBLOCK:     return "EWOULDBLOCK";
 
+    /* --- POSIX: Process Control --- */
+
+    case ECHILD:          return "ECHILD";
+    case ESRCH:           return "ESRCH";
+
     /* --- POSIX: I/O: General --- */
 
     case EIO:             return "EIO";

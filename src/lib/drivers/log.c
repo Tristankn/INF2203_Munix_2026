@@ -12,10 +12,8 @@
 static struct file *log_file = NULL;
 
 static const char *LVLSTRS[] = {
-        [LOG_ERROR] = "error",
-        [LOG_WARN]  = "warning",
-        [LOG_INFO]  = "info",
-        [LOG_DEBUG] = "debug",
+        [LOG_ERROR] = "error", [LOG_WARN] = "warning", [LOG_INFO] = "info",
+        [LOG_DEBUG] = "debug", [LOG_TRACE] = "trace",
 };
 
 int log_set_file(struct file *file)
@@ -100,7 +98,7 @@ int _vlogf(
         va_list                  va
 )
 {
-    if (lvl < 0 || LOG_DEBUG < lvl) return -EINVAL;
+    if (lvl < 0) return -EINVAL;
     if (!log_file) return -EBADF;
 
     int bufsz = DEFAULT_BUFSZ;

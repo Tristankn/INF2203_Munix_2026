@@ -23,9 +23,11 @@ long syscall_dispatch(
     case SYS_NULL:
     case SYS_MAX: break;
 
+    case SYS_exit: process_exit(arg1);
+    case SYS_write: return process_write(arg1, (void *) arg2, arg3);
+    case SYS_thrd_yield: return thread_yield();
     }
 
-    UNUSED(arg1), UNUSED(arg2), UNUSED(arg3);
     UNUSED(arg4), UNUSED(arg5);
 
     pr_info("unhandled syscall %ld from process %d (%s)\n", number,

@@ -1,5 +1,3 @@
-// #define LOG_LEVEL LOG_DEBUG
-
 #include "pagemap.h"
 
 #include <abi.h>
@@ -62,7 +60,7 @@ static size_t pme_coversz(int lvl)
     else return pme_coversz(lvl + 1) << pm_mode->lvls[lvl].idx_bits;
 }
 
-static void pme_map_debug(pme_t *entry, int lvl)
+static void pme_map_trace(pme_t *entry, int lvl)
 {
     const size_t DBGSZ = 80;
     char         dbgbuf[DBGSZ];
@@ -70,7 +68,7 @@ static void pme_map_debug(pme_t *entry, int lvl)
     const char *lvlname = pm_mode->lvls[lvl].name;
     pme_t *tbl_start = (void *) ALIGN_DOWN((uintptr_t) entry, pm_tblsz(lvl));
     size_t offset    = entry - tbl_start;
-    pr_debug(
+    pr_trace(
             "\t%-5s:%8p[%4zu] = " FMT_PME " (%s)\n", lvlname, tbl_start,
             offset, *entry, (pme_tostr(dbgbuf, DBGSZ, *entry, lvl), dbgbuf)
     );
@@ -88,7 +86,7 @@ static int addrspc_map_recursive(
     /* If this entry points to a page, simply map the page. */
     if (pm_mode->lvls[lvl + 1].is_page) {
         *entry = pme_pack(*paddr, flags | PME_PRESENT, lvl);
-        pme_map_debug(entry, lvl);
+        pme_map_trace(entry, lvl);
         *paddr += PAGESZ, *size -= PAGESZ;
         return 0;
     }
@@ -105,8 +103,10 @@ static int addrspc_map_recursive(
         if (!tbl_pg) return -ENOMEM;
         tbl = physpage_access(tbl_pg);
         memset(tbl, 0, PAGESZ);
-        pr_info("\tallocated page " FMT_PADDR " for %s\n", tbl_pg->paddr,
-                pm_mode->lvls[lvl + 1].name);
+        pr_debug(
+                "\tallocated page " FMT_PADDR " for %s\n", tbl_pg->paddr,
+                pm_mode->lvls[lvl + 1].name
+        );
         *entry = pme_pack(tbl_pg->paddr, flags | PME_PRESENT, lvl);
 
     } else {
@@ -116,7 +116,7 @@ static int addrspc_map_recursive(
         tbl    = physpage_access(tbl_pg);
         *entry = pme_set_flags(*entry, flags, lvl);
     }
-    pme_map_debug(entry, lvl);
+    pme_map_trace(entry, lvl);
 
     /* Loop through mappings on table. */
     int    child_lvl  = lvl + 1;
@@ -156,7 +156,7 @@ int addrspc_unmap_recursive(
     /* If this entry points to a page, mark it as not present. */
     if (pm_mode->lvls[lvl + 1].is_page) {
         *entry &= ~PME_PRESENT;
-        pme_map_debug(entry, lvl);
+        pme_map_trace(entry, lvl);
         *size -= PAGESZ;
         return 0;
     }
@@ -198,8 +198,10 @@ exit:
     if (tbl) physpage_close(tbl_pg);
     if (tbl_pg && tbl_empty) {
         *entry &= ~PME_PRESENT;
-        pr_info("\tfreeing %s " FMT_PADDR "\n", pm_mode->lvls[child_lvl].name,
-                tbl_pg->paddr);
+        pr_debug(
+                "\tfreeing %s " FMT_PADDR "\n", pm_mode->lvls[child_lvl].name,
+                tbl_pg->paddr
+        );
         physpage_free(tbl_pg);
     }
     return res;
@@ -222,9 +224,11 @@ int addrspc_map(
 
     size_t offsets[PM_LVL_MAX];
     pm_offsets(vaddr_val, offsets);
-    pr_info("space %8p mapping v%8p -> p" FMT_PADDR " size %#8zx, flags %s\n",
+    pr_debug(
+            "space %8p mapping v%8p -> p" FMT_PADDR " size %#8zx, flags %s\n",
             space, vaddr, paddr, size,
-            (pme_tostr(dbgbuf, DBGSZ, flags, 3), dbgbuf));
+            (pme_tostr(dbgbuf, DBGSZ, flags, 3), dbgbuf)
+    );
     return addrspc_map_recursive(
             0, &space->root_entry, offsets, &paddr, &size, flags
     );
@@ -235,7 +239,7 @@ int addrspc_unmap(struct addrspc *space, void *vaddr, size_t size)
     uintptr_t vaddr_val = ALIGN_DOWN((uintptr_t) vaddr, PAGESZ);
     if (size < SIZE_MAX - PAGESZ) size = ALIGN_UP(size, PAGESZ);
 
-    pr_info("space %8p unmapping v%8p size %#8zx\n", space, vaddr, size);
+    pr_debug("space %8p unmapping v%8p size %#8zx\n", space, vaddr, size);
     size_t offsets[PM_LVL_MAX];
     pm_offsets(vaddr_val, offsets);
     return addrspc_unmap_recursive(0, &space->root_entry, offsets, &size);

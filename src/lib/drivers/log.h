@@ -32,6 +32,7 @@ enum log_level {
     LOG_WARN,  ///< warning: irregular state that might lead to errors
     LOG_INFO,  ///< info: normal status update
     LOG_DEBUG, ///< debug: verbose information that might spam the output
+    LOG_TRACE, ///< trace: extra verbose output
 };
 
 /**
@@ -107,6 +108,7 @@ int _logf(
 #define pr_warning(FMT, ...) logf(LOG_WARN, FMT, ##__VA_ARGS__)
 #define pr_info(FMT, ...)    logf(LOG_INFO, FMT, ##__VA_ARGS__)
 #define pr_debug(FMT, ...)   logf(LOG_DEBUG, FMT, ##__VA_ARGS__)
+#define pr_trace(FMT, ...)   logf(LOG_TRACE, FMT, ##__VA_ARGS__)
 
 #define log_result(RES, FMT, ...) \
     do { \

@@ -74,13 +74,15 @@ static int sh_break_cmdline(char *cmdline, char *argv[], size_t argn)
             /* If we encounter the start of a new word,
              * record it in the argv array. */
             if (!inword) {
-                if (argc < argn) argv[argc++] = cmdline;
+                if (argc < argn - 1) argv[argc++] = cmdline;
                 else return -E2BIG; // Unless we're out of slots.
             }
             /* Update the in-word state. */
             inword = true;
         }
     }
+
+    argv[argc] = NULL;
     return argc;
 }
 

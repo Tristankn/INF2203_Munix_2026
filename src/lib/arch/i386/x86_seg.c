@@ -229,8 +229,8 @@ static struct segdesc32 kernel_gdt[] = {
                 {GDT_COMMON, .type = X86ST_CODE_R, .dpl = PL_KERNEL},
         [KSEG_KERNEL_DATA] =
                 {GDT_COMMON, .type = X86ST_DATA_W, .dpl = PL_KERNEL},
-        // TODO: Create user code segment descriptor
-        // TODO: Create user data segment descriptor
+        [KSEG_USER_CODE] = {GDT_COMMON, .type = X86ST_CODE_R, .dpl = PL_USER},
+        [KSEG_USER_DATA] = {GDT_COMMON, .type = X86ST_DATA_W, .dpl = PL_USER},
         [KSEG_TSS]       = {}, // Will be initialized at runtime
 };
 
@@ -251,10 +251,14 @@ static int init_gdt(void)
     /* Check existing GDT. */
     struct x86_pseudodesc32 gdt_pd;
     x86_sgdt(&gdt_pd);
-    pr_info("current GDT: %s\n",
-            (segdesc32_table_tostr(dbgbuf, DBGSZ, &gdt_pd), dbgbuf));
-    pr_info("segment registers: %s\n",
-            (x86_segregs_tostr(dbgbuf, DBGSZ), dbgbuf));
+    pr_debug(
+            "current GDT: %s\n",
+            (segdesc32_table_tostr(dbgbuf, DBGSZ, &gdt_pd), dbgbuf)
+    );
+    pr_debug(
+            "segment registers: %s\n",
+            (x86_segregs_tostr(dbgbuf, DBGSZ), dbgbuf)
+    );
 
     /* Install our GDT. */
     pr_debug("installing new GDT %p ...\n", KERNEL_GDTPD.base);
@@ -278,8 +282,10 @@ static int init_gdt(void)
     x86_set_reg("es", SEL_KDATA);
     x86_set_reg("ds", SEL_KDATA);
     x86_set_cs(SEL_KCODE);
-    pr_info("updated segment registers: %s\n",
-            (x86_segregs_tostr(dbgbuf, DBGSZ), dbgbuf));
+    pr_debug(
+            "updated segment registers: %s\n",
+            (x86_segregs_tostr(dbgbuf, DBGSZ), dbgbuf)
+    );
 
     return 0;
 }
@@ -306,10 +312,12 @@ static int init_tss(void)
             (segdesc32_table_tostr(dbgbuf, DBGSZ, &KERNEL_GDTPD), dbgbuf));
 
     x86_segsel_t tss_selector = X86_SEGSEL_INIT(KSEG_TSS, PL_KERNEL);
-    pr_info("loading task register w/selector %#.4x (%s) ...\n", tss_selector,
-            (x86_segsel_tostr(dbgbuf, DBGSZ, tss_selector), dbgbuf));
+    pr_debug(
+            "loading task register w/selector %#.4x (%s) ...\n", tss_selector,
+            (x86_segsel_tostr(dbgbuf, DBGSZ, tss_selector), dbgbuf)
+    );
     ltr(tss_selector);
-    pr_info("loaded  task register\n");
+    pr_debug("loaded  task register\n");
 
     return 0;
 }
@@ -344,9 +352,11 @@ void cpu_user_kstack_set(uintptr_t kstack_addr)
 noreturn void cpu_user_start(uintptr_t start_addr, uintptr_t ustack_addr)
 {
     x86_segsel_t codeseg, dataseg;
-    /* TODO: Use user code and data segments instead. */
-    codeseg = X86_SEGSEL_INIT(KSEG_KERNEL_CODE, PL_USER);
-    dataseg = X86_SEGSEL_INIT(KSEG_KERNEL_DATA, PL_USER);
+    codeseg = X86_SEGSEL_INIT(KSEG_USER_CODE, PL_USER);
+    dataseg = X86_SEGSEL_INIT(KSEG_USER_DATA, PL_USER);
+
+    ureg_t flags = 0;
+    //flags |= (1 << 9); // Enable interrupts in user space.
 
     /* On i386, the easiest way to switch to a lower privilege level
      * is to return from an interrupt.
@@ -355,20 +365,22 @@ noreturn void cpu_user_start(uintptr_t start_addr, uintptr_t ustack_addr)
     struct x86_intr_frame frame = {
             .ip    = start_addr,
             .cs    = codeseg,
-            .flags = 0,
+            .flags = flags,
             .sp    = ustack_addr,
             .ss    = dataseg,
     };
 
     const size_t DBGSZ = 256;
     char         dbgbuf[DBGSZ];
-    pr_debug(
+    pr_trace(
             "launching process by returning from fake interrupt %p:%s\n",
             &frame, (x86_intr_frame_tostr(dbgbuf, DBGSZ, &frame), dbgbuf)
     );
 
-    pr_info("launching process: start_addr=%p, ustack=%p\n",
-            (void *) start_addr, (void *) ustack_addr);
+    pr_debug(
+            "jumping to user space: start_addr=%p, ustack=%p\n",
+            (void *) start_addr, (void *) ustack_addr
+    );
 
     /* Inline assembly to switch data segments
      * and then IRET to return from fake interrupt. */

@@ -96,17 +96,21 @@ int elf_read_ehdr32(struct file *f, Elf32_Ehdr *ehdr)
     if (res < 0) return res;
 
     if (memcmp(ehdr->e_ident, ELFMAG, SELFMAG) != 0) return -EINVAL;
-    pr_info("ELF %s\n",
-            (e_ident_tostr(debugbuf, PATH_MAX, ehdr->e_ident), debugbuf));
+    pr_debug(
+            "ELF %s\n",
+            (e_ident_tostr(debugbuf, PATH_MAX, ehdr->e_ident), debugbuf)
+    );
 
     res = ehdr->e_ident[EI_CLASS] == ELFCLASS32 ? 0 : -ENOTSUP;
     if (res < 0) return res;
     res = ehdr->e_type == ET_EXEC ? 0 : -ENOTSUP;
     if (res < 0) return res;
 
-    pr_info("entry point %#8zx\n", ehdr->e_entry);
-    pr_info("%u segments, entry size %u bytes\n", ehdr->e_phnum,
-            ehdr->e_phentsize);
+    pr_debug("entry point %#8zx\n", ehdr->e_entry);
+    pr_debug(
+            "%u segments, entry size %u bytes\n", ehdr->e_phnum,
+            ehdr->e_phentsize
+    );
 
     return 0;
 }
@@ -123,8 +127,10 @@ int elf_read_phdr32(
     res = file_read(f, phdr, sizeof(Elf32_Phdr));
     if (res < 0) return res;
 
-    pr_info("seg %zu: %s\n", i,
-            (elf_phdr32_tostr(debugbuf, PATH_MAX, phdr), debugbuf));
+    pr_debug(
+            "seg %zu: %s\n", i,
+            (elf_phdr32_tostr(debugbuf, PATH_MAX, phdr), debugbuf)
+    );
 
     return 0;
 }

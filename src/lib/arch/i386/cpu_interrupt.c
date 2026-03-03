@@ -2,6 +2,7 @@
 
 #include "x86_seg.h"
 
+#include <drivers/chip/intctl_8259.h>
 #include <drivers/log.h>
 
 #include <core/compiler.h>
@@ -95,13 +96,27 @@ const char *ivec_name(ivec_t ivec)
 {
     switch (ivec) {
     case 0: return "#DE - Divide Error";
+    case 1: return "#DB - Debug Exception";
+    case 2: return "NMI - Non-Maskable Interrupt";
+    case 3: return "#BP - Breakpoint";
+    case 4: return "#OF - Overflow";
+    case 5: return "#BR - BOUND Range Exceeded";
     case 6: return "#UD - Undefined Opcode";
+    case 7: return "#NM - No Math Coprocessor";
     case 8: return "#DF - Double Fault";
+    case 9: return "Coprocessor Segment Overrun";
     case 10: return "#TS - Invalid TSS";
     case 11: return "#NP - Segment Not Present";
     case 12: return "#SS - Stack-Segment Fault";
     case 13: return "#GP - General Protection Fault";
     case 14: return "#PF - Page Fault";
+    case 16: return "#MF - FPU Math Fault";
+    case 17: return "#AC - Alignment Check";
+    case 18: return "#MC - Machine Check";
+    case 19: return "#XM - SIMD Exception";
+    case 20: return "#VE - Virtualization Exception";
+    case 21: return "#CP - Control Protection Exception";
+    case IVEC_IRQ_0 + IRQ_TIMER: return "Timer IRQ";
     default: return "[unknown]";
     }
 }
@@ -112,21 +127,27 @@ const char *ivec_name(ivec_t ivec)
 #define ivec_haserrcode(IVEC) \
     (IVEC == 8 || (10 <= IVEC && IVEC <= 14) || IVEC == 17)
 
-/* TODO: Use ISR and ISR_E macros to define interrupt handler functions. */
-//ISR(0, isr0);        ///< Handler for x86 #DE Divide Error
-//ISR(6, isr6);        ///< Handler for x86 #UD Undefined Opcode
-//ISR_E(8, isr8);      ///< Handler for x86 #DF Double Fault
-//ISR_E(13, isr13);    ///< Handler for x86 #GP General Protection Fault
-//ISR_E(14, isr14);    ///< Handler for x86 #PF Page Fault
+ISR(0, isr0);     ///< Handler for x86 \#DE Divide Error
+ISR(6, isr6);     ///< Handler for x86 \#UD Undefined Opcode
+ISR_E(8, isr8);   ///< Handler for x86 \#DF Double Fault
+ISR_E(10, isr10); ///< Handler for x86 \#TS Invalid TSS
+ISR_E(11, isr11); ///< Handler for x86 \#NP Segment Not Present
+ISR_E(12, isr12); ///< Handler for x86 \#SS Stack-Segment Fault
+ISR_E(13, isr13); ///< Handler for x86 \#GP General Protection Fault
+ISR_E(14, isr14); ///< Handler for x86 \#PF Page Fault
+//ISR(IVEC_IRQ_0 + IRQ_TIMER, isr_irq0); ///< Handler for IRQ 0 (Timer)
 
 /** Interrupt handler functions to install into the IDT. */
 static const struct handler_to_install HANDLERS[] = {
-/* TODO: Add defined interrupt handlers to this array/ */
-//{0, isr0},   /// Divide Error
-//{6, isr6},   /// UNdefined Opcode
-//{8, isr8},   /// Double Fault
-//{13, isr13}, /// General Protection Fault
-//{14, isr14}, /// Page Fault
+        {0, isr0},                          /// Divide Error
+        {6, isr6},                          /// UNdefined Opcode
+        {8, isr8},                          /// Double Fault
+        {10, isr10},                        /// Invalid TSS
+        {11, isr11},                        /// Segment Not Present
+        {12, isr12},                        /// Stack-Segment Fault
+        {13, isr13},                        /// General Protection Fault
+        {14, isr14},                        /// Page Fault
+//{IVEC_IRQ_0 + IRQ_TIMER, isr_irq0}, /// IRQ 0: Timer
 };
 
 /* The kernel will provide a syscall entry interrupt handler. */
