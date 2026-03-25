@@ -316,8 +316,14 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     TODO();
     UNUSED(p), UNUSED(start_addr), UNUSED(ustack);
 
-    struct thread new_thread;
+    struct thread *new_thread = malloc(sizeof(*new_thread));
+    new_thread->process = p;
+    new_thread->thread_stack = ustack;
+    new_thread->runstate = RS_NEW;
+
     
+
+
     
     return -ENOSYS;
 }

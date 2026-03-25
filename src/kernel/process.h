@@ -59,7 +59,7 @@ struct thread {
 
     /* TODO: Other fields for thread? */
 
-    /* Initiating thread stack*/
+    /* Thread stack adress*/
     uintptr_t thread_stack;
 
 
