@@ -231,6 +231,10 @@ int process_start(struct process *p, int argc, char *argv[])
         cpu_user_start(p->start_addr, p->ustack);
         /* Will not return. */
     }
+
+    case PSTART_THREAD: {
+        
+    }
     };
 
     return -ENOTSUP;
@@ -313,16 +317,23 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
 
 int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 {
+    /* Allocate thread and return error on failure*/
     struct thread *new_thread = thread_alloc();
     if(!new_thread){
         return -ENOSYS;
     }
+    /* Set correct arguments*/
     new_thread->process = p;
     new_thread->thread_stack = ustack;
     new_thread->start_addr = start_addr;
     new_thread->runstate = RS_NEW;
+    /* Set and increment TID so that it does not get reused */
+    new_thread->tid = next_tid++;
 
-    return 1;
+    /*Add the new thread to the process list of threads*/
+    list_add(&new_thread->process_threads, &p->threads);
+
+    return 0;
 }
 
 _Noreturn void thread_exit(int status)
