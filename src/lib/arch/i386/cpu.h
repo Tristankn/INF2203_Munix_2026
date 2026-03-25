@@ -97,6 +97,13 @@ _Noreturn void cpu_fresh_stack(void (*fn)(void), uintptr_t kstack);
 
 struct cpu_task_save {
     /* TODO: Decide what state to save in struct */
+    uintptr_t EFLAGS;
+    uintptr_t registers;
+    uintptr_t stack_pointer;
+    uintptr_t intruction_pointer;
+
+
+
 };
 
 ATTR_RETURNS_TWICE int cpu_task_save(struct cpu_task_save *save_state);

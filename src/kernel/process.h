@@ -62,6 +62,9 @@ struct thread {
     /* Thread stack adress*/
     uintptr_t thread_stack;
 
+    /* Start adress*/
+    uintptr_t start_addr;
+
 
     /* Run state */
     enum runstate        runstate;
