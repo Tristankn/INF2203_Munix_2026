@@ -315,6 +315,10 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 {
     TODO();
     UNUSED(p), UNUSED(start_addr), UNUSED(ustack);
+
+    struct thread new_thread;
+    
+    
     return -ENOSYS;
 }
 
