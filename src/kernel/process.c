@@ -236,6 +236,10 @@ int process_start(struct process *p, int argc, char *argv[])
         push_args((ureg_t **) &p->ustack, argc, argv);
         cpu_user_kstack_set(p->kstack);
         int a = thread_create(p, p->start_addr, p->ustack);
+
+        schedule();
+
+        cpu_user_start(p->start_addr, p->ustack);
         pr_info("THREAD CREATE RETURNS %d!\n", a);
     }
     };
@@ -283,6 +287,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     current_thread  = incoming;
     current_process = incoming->process;
     /* TODO: Set target kernel stack for incoming thread. */
+
 
     /* Low-level save/restore. */
     if (outgoing && cpu_task_save(&outgoing->saved_state) != 0) {
@@ -338,7 +343,7 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 
     /* Add new thread to the scheduler queue*/
     sched_add(new_thread);
-
+    pr_info("ADDED TO SCHEDULEEEEEEEEEEEEER!!!");
     return 0;
 }
 
