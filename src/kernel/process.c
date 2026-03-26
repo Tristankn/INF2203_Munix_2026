@@ -308,7 +308,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     case RS_NEW:
         /* TODO: update run state and launch thread */
         incoming->runstate = RS_READY;
-        cpu_user_start(incoming->process->start_addr, incoming->process->ustack);
+        cpu_user_start(incoming->start_addr,incoming->thread_stack);
 
     case RS_READY:
         cpu_task_restore(&incoming->saved_state, 1);
@@ -326,6 +326,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
 
 int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 {
+    #define THREAD_STACK_SIZE 0x1000 /*thread stack size*/
     /* Allocate thread and return error on failure*/
     struct thread *new_thread = thread_alloc();
     if(!new_thread){
@@ -333,7 +334,10 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     }
     /* Set correct arguments*/
     new_thread->process = p;
-    new_thread->thread_stack = ustack;
+
+    int idx = new_thread - tcb;
+
+    new_thread->thread_stack =p->ustack - (idx * THREAD_STACK_SIZE); /*create a thread stack with the thread stack size*/
     new_thread->start_addr = start_addr;
     new_thread->runstate = RS_NEW;
     /* Set and increment TID so that it does not get reused */
@@ -344,7 +348,6 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 
     /* Add new thread to the scheduler queue*/
     sched_add(new_thread);
-    pr_info("ADDED TO SCHEDULEEEEEEEEEEEEER!!!");
     return new_thread->tid;
 }
 
@@ -357,6 +360,7 @@ _Noreturn void thread_exit(int status)
 
     sched_remove(current_thread); /*Remove the current thread from scheduler*/
 
+
     schedule(); /*move to next scheduled thread*/
     kernel_noreturn();
 }
@@ -366,19 +370,22 @@ int thread_join(pid_t tid)
     struct thread *temp = NULL;
     for(int i = 0; i< THREAD_MAX; i++){ /* find the thread from tcb array*/
         if(tcb[i].tid == tid){
-            temp = &tcb[i]; /*set the temp thread to the found thread*/
+            temp = &tcb[i]; /*set the temp thread to the found thread and it  is free*/
             break;
         }
     }
     if(temp == NULL){
         pr_info("No thread found! INSIDE THREAD JOIN ----..---");
+        return -ESRCH;
     }
 
     while (temp->runstate != RS_EXITED){
         schedule();
     }
     pr_info("thread join finished!");
-    return (temp->exit_status);
+    int status = temp->exit_status; /*save the exit status before closing*/
+        thread_close(temp);
+    return (status);
     pr_info("INSIDE THREAD JOIN tid = %d", tid);
     return -ENOSYS;
 }
