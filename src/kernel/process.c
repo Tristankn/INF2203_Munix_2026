@@ -307,6 +307,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     switch (incoming->runstate) {
     case RS_NEW:
         /* TODO: update run state and launch thread */
+        incoming->runstate = RS_READY;
         cpu_user_start(incoming->process->start_addr, incoming->process->ustack);
 
     case RS_READY:

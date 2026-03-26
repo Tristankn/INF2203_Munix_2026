@@ -30,6 +30,12 @@ cpu_task_save:
 
 	/* TODO: Save state into cpu_task_save struct. */
 
+	mov %esp, 0(%ecx)
+	mov %ebp, 4(%ecx)
+	mov %ebx, 8(%ecx)
+	mov %esi, 12(%ecx)
+	mov %edi, 16(%ecx)
+
 	/* Return to caller with return value 0. */
 	mov	$0, %eax		// 0 return code to indicate save
 	ret
