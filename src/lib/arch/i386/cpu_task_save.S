@@ -47,5 +47,13 @@ cpu_task_restore:
 	/* TODO: Restore state from cpu_task_save struct.
 	 * Should basically be the reverse of cpu_task_save. */
 
+	 mov 0(%ecx), %esp
+	 mov 4(%ecx), %ebp
+	 mov 8(%ecx), %ebx
+	 mov 12(%ecx), %esi
+	 mov 16(%ecx), %edi
+
+	 ret
+
 	/* Return to caller of cpu_task_save with given return value. */
 	ret
