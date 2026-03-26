@@ -234,12 +234,9 @@ int process_start(struct process *p, int argc, char *argv[])
     
     case PSTART_THREAD: {
         push_args((ureg_t **) &p->ustack, argc, argv);
-        cpu_user_kstack_set(p->kstack);
         int a = thread_create(p, p->start_addr, p->ustack);
 
         schedule();
-
-        cpu_user_start(p->start_addr, p->ustack);
         pr_info("THREAD CREATE RETURNS %d!\n", a);
     }
     };
@@ -286,7 +283,10 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     /* Set current thread and set kstack on interrupt. */
     current_thread  = incoming;
     current_process = incoming->process;
+
     /* TODO: Set target kernel stack for incoming thread. */
+    cpu_user_kstack_set(incoming->process->kstack);
+
 
 
     /* Low-level save/restore. */
@@ -307,6 +307,8 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     switch (incoming->runstate) {
     case RS_NEW:
         /* TODO: update run state and launch thread */
+        cpu_user_start(incoming->process->start_addr, incoming->process->ustack);
+
         return -ENOSYS;
 
     case RS_READY:
@@ -334,7 +336,7 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     new_thread->process = p;
     new_thread->thread_stack = ustack;
     new_thread->start_addr = start_addr;
-    new_thread->runstate = RS_READY;
+    new_thread->runstate = RS_NEW;
     /* Set and increment TID so that it does not get reused */
     new_thread->tid = next_tid++;
 
