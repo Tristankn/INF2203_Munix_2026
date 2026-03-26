@@ -211,7 +211,7 @@ enum start_strategy {
 
 int process_start(struct process *p, int argc, char *argv[])
 {
-    enum start_strategy start_strat = PSTART_LAUNCH;
+    enum start_strategy start_strat = PSTART_THREAD;
 
     current_process = p;
 
@@ -231,9 +231,12 @@ int process_start(struct process *p, int argc, char *argv[])
         cpu_user_start(p->start_addr, p->ustack);
         /* Will not return. */
     }
-
+    
     case PSTART_THREAD: {
-        
+        push_args((ureg_t **) &p->ustack, argc, argv);
+        cpu_user_kstack_set(p->kstack);
+        int a = thread_create(p, p->start_addr, p->ustack);
+        pr_info("THREAD CREATE RETURNS %d!\n", a);
     }
     };
 
@@ -326,12 +329,15 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     new_thread->process = p;
     new_thread->thread_stack = ustack;
     new_thread->start_addr = start_addr;
-    new_thread->runstate = RS_NEW;
+    new_thread->runstate = RS_READY;
     /* Set and increment TID so that it does not get reused */
     new_thread->tid = next_tid++;
 
     /*Add the new thread to the process list of threads*/
     list_add(&new_thread->process_threads, &p->threads);
+
+    /* Add new thread to the scheduler queue*/
+    sched_add(new_thread);
 
     return 0;
 }
