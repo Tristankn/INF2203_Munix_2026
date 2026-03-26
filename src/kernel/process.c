@@ -348,7 +348,6 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 
     /* Add new thread to the scheduler queue*/
     sched_add(new_thread);
-    pr_info("ADDED TO SCHEDULEEEEEEEEEEEEER!!!");
     return new_thread->tid;
 }
 
