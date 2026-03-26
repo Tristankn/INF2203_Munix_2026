@@ -59,6 +59,13 @@ struct thread {
 
     /* TODO: Other fields for thread? */
 
+    /* Thread stack adress*/
+    uintptr_t thread_stack;
+
+    /* Start adress*/
+    uintptr_t start_addr;
+
+
     /* Run state */
     enum runstate        runstate;
     struct cpu_task_save saved_state;

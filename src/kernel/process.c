@@ -211,7 +211,7 @@ enum start_strategy {
 
 int process_start(struct process *p, int argc, char *argv[])
 {
-    enum start_strategy start_strat = PSTART_LAUNCH;
+    enum start_strategy start_strat = PSTART_THREAD;
 
     current_process = p;
 
@@ -230,6 +230,14 @@ int process_start(struct process *p, int argc, char *argv[])
         cpu_user_kstack_set(p->kstack);
         cpu_user_start(p->start_addr, p->ustack);
         /* Will not return. */
+    }
+    
+    case PSTART_THREAD: {
+        push_args((ureg_t **) &p->ustack, argc, argv);
+        int a = thread_create(p, p->start_addr, p->ustack);
+
+        schedule();
+        pr_info("THREAD CREATE RETURNS %d!\n", a);
     }
     };
 
@@ -275,7 +283,11 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     /* Set current thread and set kstack on interrupt. */
     current_thread  = incoming;
     current_process = incoming->process;
+
     /* TODO: Set target kernel stack for incoming thread. */
+    cpu_user_kstack_set(incoming->process->kstack);
+
+
 
     /* Low-level save/restore. */
     if (outgoing && cpu_task_save(&outgoing->saved_state) != 0) {
@@ -295,7 +307,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     switch (incoming->runstate) {
     case RS_NEW:
         /* TODO: update run state and launch thread */
-        return -ENOSYS;
+        cpu_user_start(incoming->process->start_addr, incoming->process->ustack);
 
     case RS_READY:
         cpu_task_restore(&incoming->saved_state, 1);
@@ -313,9 +325,26 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
 
 int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 {
-    TODO();
-    UNUSED(p), UNUSED(start_addr), UNUSED(ustack);
-    return -ENOSYS;
+    /* Allocate thread and return error on failure*/
+    struct thread *new_thread = thread_alloc();
+    if(!new_thread){
+        return -ENOSYS;
+    }
+    /* Set correct arguments*/
+    new_thread->process = p;
+    new_thread->thread_stack = ustack;
+    new_thread->start_addr = start_addr;
+    new_thread->runstate = RS_NEW;
+    /* Set and increment TID so that it does not get reused */
+    new_thread->tid = next_tid++;
+
+    /*Add the new thread to the process list of threads*/
+    list_add(&new_thread->process_threads, &p->threads);
+
+    /* Add new thread to the scheduler queue*/
+    sched_add(new_thread);
+    pr_info("ADDED TO SCHEDULEEEEEEEEEEEEER!!!");
+    return 0;
 }
 
 _Noreturn void thread_exit(int status)
