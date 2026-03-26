@@ -309,8 +309,6 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
         /* TODO: update run state and launch thread */
         cpu_user_start(incoming->process->start_addr, incoming->process->ustack);
 
-        return -ENOSYS;
-
     case RS_READY:
         cpu_task_restore(&incoming->saved_state, 1);
         /* No return. */
