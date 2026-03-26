@@ -234,7 +234,7 @@ int process_start(struct process *p, int argc, char *argv[])
     
     case PSTART_THREAD: {
         push_args((ureg_t **) &p->ustack, argc, argv);
-        int a = thread_create(p, p->start_addr, p->ustack);
+        int a =  thread_create(p, p->start_addr, p->ustack);
 
         schedule();
         pr_info("THREAD CREATE RETURNS %d!\n", a);
@@ -344,20 +344,41 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     /* Add new thread to the scheduler queue*/
     sched_add(new_thread);
     pr_info("ADDED TO SCHEDULEEEEEEEEEEEEER!!!");
-    return 0;
+    return new_thread->tid;
 }
 
 _Noreturn void thread_exit(int status)
 {
-    TODO();
-    UNUSED(status);
+    pr_info("INSIDE THREAD EXIT --------------------- status = %d", status);
+
+    current_thread->exit_status = status; /* Setting exit status for current thread*/
+    current_thread->runstate = RS_EXITED;   /*Setting the runstate to RS_EXITED*/
+
+    sched_remove(current_thread); /*Remove the current thread from scheduler*/
+
+    schedule(); /*move to next scheduled thread*/
     kernel_noreturn();
 }
 
 int thread_join(pid_t tid)
 {
-    TODO();
-    UNUSED(tid);
+    struct thread *temp = NULL;
+    for(int i = 0; i< THREAD_MAX; i++){ /* find the thread from tcb array*/
+        if(tcb[i].tid == tid){
+            temp = &tcb[i]; /*set the temp thread to the found thread*/
+            break;
+        }
+    }
+    if(temp == NULL){
+        pr_info("No thread found! INSIDE THREAD JOIN ----..---");
+    }
+
+    while (temp->runstate != RS_EXITED){
+        schedule();
+    }
+    pr_info("thread join finished!");
+    return (temp->exit_status);
+    pr_info("INSIDE THREAD JOIN tid = %d", tid);
     return -ENOSYS;
 }
 

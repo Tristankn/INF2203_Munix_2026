@@ -27,6 +27,7 @@ long syscall_dispatch(
     case SYS_write: return process_write(arg1, (void *) arg2, arg3);
     case SYS_thrd_yield: return thread_yield();
     case SYS_thrd_create: return thread_create(current_process, arg1, arg2);
+    case SYS_thrd_join: return thread_join(arg1);
     }
 
     UNUSED(arg4), UNUSED(arg5);
