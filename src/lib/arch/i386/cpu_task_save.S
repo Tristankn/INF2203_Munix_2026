@@ -27,14 +27,20 @@ cpu_fresh_stack:
 
 cpu_task_save:
 	mov	+4(%esp), %ecx		// arg1: struct cpu_task_save ptr
+	/* Fetch the return adress early */
+	mov	+0(%esp), %edx
 
 	/* TODO: Save state into cpu_task_save struct. */
 
+	/* Save registers to struct */
 	mov %esp, 0(%ecx)
 	mov %ebp, 4(%ecx)
 	mov %ebx, 8(%ecx)
 	mov %esi, 12(%ecx)
 	mov %edi, 16(%ecx)
+
+	/* Save a return adress */
+	mov %edx, 20(%ecx)
 
 	/* Return to caller with return value 0. */
 	mov	$0, %eax		// 0 return code to indicate save
@@ -47,13 +53,20 @@ cpu_task_restore:
 	/* TODO: Restore state from cpu_task_save struct.
 	 * Should basically be the reverse of cpu_task_save. */
 
-	 mov 0(%ecx), %esp
-	 mov 4(%ecx), %ebp
-	 mov 8(%ecx), %ebx
-	 mov 12(%ecx), %esi
-	 mov 16(%ecx), %edi
+	/* Restore registers */
+    mov 0(%ecx), %esp
+    mov 4(%ecx), %ebp
+    mov 8(%ecx), %ebx
+    mov 12(%ecx), %esi
+    mov 16(%ecx), %edi
 
-	 ret
+	/* Restore the return adress */
+	mov 20(%ecx), %edx		
+	/* Allocate space for a return adress on the stack */
+    sub $4, %esp			
+	/* Add the return adress to the stack */
+    mov %edx, (%esp)	
 
 	/* Return to caller of cpu_task_save with given return value. */
 	ret
+

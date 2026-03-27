@@ -246,8 +246,6 @@ int process_start(struct process *p, int argc, char *argv[])
         break;
     }
     };
-
-    return -ENOTSUP;
 }
 
 void process_kill(struct process *p)
@@ -291,7 +289,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     current_process = incoming->process;
 
     /* TODO: Set target kernel stack for incoming thread. */
-    cpu_user_kstack_set(incoming->process->kstack);
+    cpu_user_kstack_set(incoming->thread_stack);
 
 
 
@@ -314,7 +312,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     case RS_NEW:
         /* TODO: update run state and launch thread */
         incoming->runstate = RS_READY;
-        cpu_user_start(incoming->start_addr,incoming->thread_stack);
+        cpu_user_start(incoming->start_addr,incoming->process_stack);
 
         break;
     case RS_READY:
@@ -338,10 +336,13 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     if(!new_thread){
         return -ENOSYS;
     }
+
+    int idx = new_thread - tcb;
     
     /* Set correct arguments*/
     new_thread->process = p;
-    new_thread->thread_stack = ustack;
+    new_thread->thread_stack = (uintptr_t)kstacks[idx] + KSTACKSZ;
+    new_thread->process_stack = ustack;
     new_thread->start_addr = start_addr;
     new_thread->runstate = RS_NEW;
     /* Set and increment TID so that it does not get reused */
@@ -384,8 +385,10 @@ int thread_join(pid_t tid)
     }
 
     while (temp->runstate != RS_EXITED){
-        schedule();
+        thread_yield();
     }
+
+
     pr_info("thread join finished!");
     int status = temp->exit_status; /*save the exit status before closing*/
         thread_close(temp);
@@ -396,8 +399,8 @@ int thread_join(pid_t tid)
 
 int thread_yield(void)
 {
-    TODO();
-    return -ENOSYS;
+    schedule();
+    return 0;
 }
 
 int thread_preempt(void)

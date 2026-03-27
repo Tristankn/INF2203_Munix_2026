@@ -102,6 +102,8 @@ struct cpu_task_save {
     uintptr_t callee_EBX;
     uintptr_t callee_ESI;
     uintptr_t callee_EDI;
+    uintptr_t return_addr;
+
 };
 
 ATTR_RETURNS_TWICE int cpu_task_save(struct cpu_task_save *save_state);
