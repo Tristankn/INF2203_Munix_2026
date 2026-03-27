@@ -57,8 +57,6 @@ struct thread {
     struct process  *process;
     struct list_head process_threads;
 
-    /* TODO: Other fields for thread? */
-
     /* Thread stack adress*/
     uintptr_t thread_stack;
 

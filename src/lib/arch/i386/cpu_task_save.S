@@ -30,7 +30,7 @@ cpu_task_save:
 	/* Fetch the return adress early */
 	mov	+0(%esp), %edx
 
-	/* TODO: Save state into cpu_task_save struct. */
+	/* Save state into cpu_task_save struct. */
 
 	/* Save registers to struct */
 	mov %esp, 0(%ecx)
@@ -50,7 +50,7 @@ cpu_task_restore:
 	mov	+4(%esp), %ecx		// arg1: struct cpu_task_save ptr
 	mov	+8(%esp), %eax		// arg2: return code
 
-	/* TODO: Restore state from cpu_task_save struct.
+	/* Restore state from cpu_task_save struct.
 	 * Should basically be the reverse of cpu_task_save. */
 
 	/* Restore registers */

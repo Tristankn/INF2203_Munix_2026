@@ -289,7 +289,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     current_thread  = incoming;
     current_process = incoming->process;
 
-    /* TODO: Set target kernel stack for incoming thread. */
+    /* Set target kernel stack for incoming thread. */
     cpu_user_kstack_set(incoming->thread_stack);
 
 
@@ -311,7 +311,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
      * Now switch to incoming thread. */
     switch (incoming->runstate) {
     case RS_NEW:
-        /* TODO: update run state and launch thread */
+        /* Update run state and launch thread */
         incoming->runstate = RS_READY;
         cpu_user_start(incoming->start_addr,incoming->process_stack);
 

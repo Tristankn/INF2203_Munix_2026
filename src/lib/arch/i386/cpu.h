@@ -96,7 +96,7 @@ long syscall_dispatch(
 _Noreturn void cpu_fresh_stack(void (*fn)(void), uintptr_t kstack);
 
 struct cpu_task_save {
-    /* TODO: Decide what state to save in struct */
+    /* Save necessary values for restoring to a CPU state */
     uintptr_t stackPointer_ESP;
     uintptr_t stackFrame_EBP;
     uintptr_t callee_EBX;
