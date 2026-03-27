@@ -70,7 +70,9 @@ static struct thread *choose_next_thread(void)
 
 void schedule(void)
 {
+    pr_info("[SCHED] picking next thread...\n");
     /* If there is a current thread running, put it back in the ready queue. */
+    
     if (current_thread && current_thread->runstate == RS_READY)
         list_add_tail(&current_thread->queue, &ready_queue);
 
@@ -78,5 +80,6 @@ void schedule(void)
     struct thread *next = choose_next_thread();
     sched_remove(next);
     thread_switch(current_thread, next);
+
 }
 
