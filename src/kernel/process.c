@@ -84,7 +84,10 @@ int process_load_path(struct process *p, const char *cwd, const char *path)
     pm_set_root(p->addrspc.root_entry);
 
     /* Make user stack writeable. */
-    size_t    ustack_sz = PAGESZ;
+    #define THREAD_STACK_SIZE 0x1000 /*Defining thread stack size size*/
+    #define THREAD_STACK_TOTAL (THREAD_MAX * THREAD_STACK_SIZE) /*defining the total stack*/
+
+    size_t ustack_sz = THREAD_STACK_TOTAL; /*setting user stack to the new thread stack total*/
     uintptr_t ustack_low =
             STACK_DIR == STACK_DOWN ? p->ustack - ustack_sz : p->ustack;
     res = addrspc_map(
@@ -230,6 +233,7 @@ int process_start(struct process *p, int argc, char *argv[])
         cpu_user_kstack_set(p->kstack);
         cpu_user_start(p->start_addr, p->ustack);
         /* Will not return. */
+        break;
     }
     
     case PSTART_THREAD: {
@@ -237,7 +241,9 @@ int process_start(struct process *p, int argc, char *argv[])
         int a =  thread_create(p, p->start_addr, p->ustack);
 
         schedule();
-        pr_info("THREAD CREATE RETURNS %d!\n", a);
+
+
+        break;
     }
     };
 
@@ -310,6 +316,7 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
         incoming->runstate = RS_READY;
         cpu_user_start(incoming->start_addr,incoming->thread_stack);
 
+        break;
     case RS_READY:
         cpu_task_restore(&incoming->saved_state, 1);
         /* No return. */
@@ -326,18 +333,15 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
 
 int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 {
-    #define THREAD_STACK_SIZE 0x1000 /*thread stack size*/
     /* Allocate thread and return error on failure*/
     struct thread *new_thread = thread_alloc();
     if(!new_thread){
         return -ENOSYS;
     }
+    
     /* Set correct arguments*/
     new_thread->process = p;
-
-    int idx = new_thread - tcb;
-
-    new_thread->thread_stack =p->ustack - (idx * THREAD_STACK_SIZE); /*create a thread stack with the thread stack size*/
+    new_thread->thread_stack = ustack;
     new_thread->start_addr = start_addr;
     new_thread->runstate = RS_NEW;
     /* Set and increment TID so that it does not get reused */
