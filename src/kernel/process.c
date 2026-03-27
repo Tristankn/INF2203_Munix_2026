@@ -241,11 +241,12 @@ int process_start(struct process *p, int argc, char *argv[])
         int a =  thread_create(p, p->start_addr, p->ustack);
 
         schedule();
-
+        UNUSED(a);
 
         break;
     }
     };
+    return 0;
 }
 
 void process_kill(struct process *p)
@@ -358,8 +359,6 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
 
 _Noreturn void thread_exit(int status)
 {
-    pr_info("INSIDE THREAD EXIT --------------------- status = %d", status);
-
     current_thread->exit_status = status; /* Setting exit status for current thread*/
     current_thread->runstate = RS_EXITED;   /*Setting the runstate to RS_EXITED*/
 
@@ -393,7 +392,6 @@ int thread_join(pid_t tid)
     int status = temp->exit_status; /*save the exit status before closing*/
         thread_close(temp);
     return (status);
-    pr_info("INSIDE THREAD JOIN tid = %d", tid);
     return -ENOSYS;
 }
 
