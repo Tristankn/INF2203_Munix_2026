@@ -62,6 +62,9 @@ struct thread {
     /* Thread stack adress*/
     uintptr_t thread_stack;
 
+    /* Shared process stack*/
+    uintptr_t process_stack;
+
     /* Start adress*/
     uintptr_t start_addr;
 
