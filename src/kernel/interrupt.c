@@ -2,6 +2,7 @@
 
 #include "kernel.h"
 #include "process.h"
+#include "scheduler.h"
 
 #include <cpu_interrupt.h>
 
@@ -55,6 +56,9 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
     /* Handle IRQ. */
     switch (irq) {
     case IRQ_TIMER:
+        pr_info("Inside switch case IRQ_TIMER!\n");
+        schedule();
+        break;
 
     default: {
         logf_once(
@@ -71,6 +75,7 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
 void interrupt_dispatch(ivec_t ivec, struct intrdata *idata)
 {
     pr_debug("interrupt %d (%s)\n", ivec, ivec_name(ivec));
+    pr_info("\nInterrupt_dispatch ble kalt!\n");
 
     if (ivec_isexception(ivec)) return handle_exception(ivec, idata);
 
@@ -83,7 +88,7 @@ void interrupt_dispatch(ivec_t ivec, struct intrdata *idata)
 int init_int_controller(void)
 {
     irqmask_t IRQS_TO_ENABLE = 0;
-    //IRQS_TO_ENABLE |= (1 << IRQ_TIMER);
+    IRQS_TO_ENABLE |= (1 << IRQ_TIMER);
 
     /* Initialize Interrupt Controller. */
     pic_init(IVEC_IRQ_0);

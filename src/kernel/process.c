@@ -388,7 +388,6 @@ int thread_join(pid_t tid)
     }
 
 
-    pr_info("thread join finished!");
     int status = temp->exit_status; /*save the exit status before closing*/
         thread_close(temp);
     return (status);
