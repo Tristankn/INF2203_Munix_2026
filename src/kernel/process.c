@@ -319,7 +319,6 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
        
        break;
        case RS_READY:
-       pr_info("\nInne i RS_READY i Thread_switch!\n");
        cpu_task_restore(&incoming->saved_state, 1);
        /* No return. */
        
@@ -374,7 +373,6 @@ _Noreturn void thread_exit(int status)
 
 int thread_join(pid_t tid)
 {
-    pr_info("\nInne i thread join!\n");
     struct thread *temp = NULL;
     for(int i = 0; i< THREAD_MAX; i++){ /* find the thread from tcb array*/
         if(tcb[i].tid == tid){
@@ -400,7 +398,6 @@ int thread_join(pid_t tid)
 
 int thread_yield(void)
 {
-    pr_info("\nInne i thread join!\n");
     intr_setenabled(0);
     current_thread->runstate = RS_READY;
     current_thread->yield_ct++;

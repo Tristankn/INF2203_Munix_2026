@@ -19,8 +19,6 @@ ATTR_CALLED_FROM_ISR
 static void
 isr_common_x86(ivec_t vec, struct x86_intr_frame *frame, ureg_t errcode)
 {
-    pr_info("\nisr_common_x86 ble kalt!!!!!!!!!!\n");
-
     /* Complete transition to kernel mode by setting data segments. */
     x86_segsel_t ds, es;
     x86_get_reg("ds", ds);
