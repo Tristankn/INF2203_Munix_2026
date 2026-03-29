@@ -263,6 +263,7 @@ _Noreturn void process_exit(int status)
     pr_info("process %d (%s) exited with status %d\n", current_process->pid,
             current_process->name, status);
     process_close(current_process);
+    current_thread->runstate = RS_EXITED;
     kernel_noreturn();
 }
 
@@ -286,48 +287,49 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
             incoming->process->name
     );
 
+    
+    
+    /* Low-level save/restore. */
+    if (outgoing && cpu_task_save(&outgoing->saved_state) != 0) {
+        /* Non-zero return value indicates that we are resuming
+        * a saved thread. Return from here and follow saved thread's
+        * return path to where it yielded or was interrupted. */
+       pr_trace("%d (%s) resumed\n", outgoing->tid, outgoing->process->name);
+       return 0;
+    } else if (outgoing) {
+        /* Zero return value indicates that the outgoing thread was
+        * saved successfully. Continue to restoring incoming thread. */
+       pr_trace("%d (%s) saved\n", outgoing->tid, outgoing->process->name);
+    }
+
     /* Set current thread and set kstack on interrupt. */
     current_thread  = incoming;
     current_process = incoming->process;
 
     /* Set target kernel stack for incoming thread. */
     cpu_user_kstack_set(incoming->thread_stack);
-
-
-
-    /* Low-level save/restore. */
-    if (outgoing && cpu_task_save(&outgoing->saved_state) != 0) {
-        /* Non-zero return value indicates that we are resuming
-         * a saved thread. Return from here and follow saved thread's
-         * return path to where it yielded or was interrupted. */
-        pr_trace("%d (%s) resumed\n", outgoing->tid, outgoing->process->name);
-        return 0;
-    } else if (outgoing) {
-        /* Zero return value indicates that the outgoing thread was
-         * saved successfully. Continue to restoring incoming thread. */
-        pr_trace("%d (%s) saved\n", outgoing->tid, outgoing->process->name);
-    }
-
+    
     /* No outgoing thread or successful save of outgoing thread.
-     * Now switch to incoming thread. */
-    switch (incoming->runstate) {
-    case RS_NEW:
-        /* Update run state and launch thread */
-        incoming->runstate = RS_READY;
-        cpu_user_start(incoming->start_addr,incoming->process_stack);
-
-        break;
-    case RS_READY:
-        cpu_task_restore(&incoming->saved_state, 1);
-        /* No return. */
-
-    default:
-        pr_error(
-                "%s: incoming thread %d (%s) has non-run state %d\n", __func__,
-                incoming->tid, incoming->process->name, incoming->runstate
+    * Now switch to incoming thread. */
+   switch (incoming->runstate) {
+       case RS_NEW:
+       /* Update run state and launch thread */
+       incoming->runstate = RS_READY;
+       cpu_user_start(incoming->start_addr,incoming->process_stack);
+       
+       break;
+       case RS_READY:
+       pr_info("\nInne i RS_READY i Thread_switch!\n");
+       cpu_task_restore(&incoming->saved_state, 1);
+       /* No return. */
+       
+       default:
+       pr_error(
+           "%s: incoming thread %d (%s) has non-run state %d\n", __func__,
+           incoming->tid, incoming->process->name, incoming->runstate
         );
     }
-
+    
     kernel_noreturn();
 }
 
@@ -372,6 +374,7 @@ _Noreturn void thread_exit(int status)
 
 int thread_join(pid_t tid)
 {
+    pr_info("\nInne i thread join!\n");
     struct thread *temp = NULL;
     for(int i = 0; i< THREAD_MAX; i++){ /* find the thread from tcb array*/
         if(tcb[i].tid == tid){
@@ -397,6 +400,7 @@ int thread_join(pid_t tid)
 
 int thread_yield(void)
 {
+    pr_info("\nInne i thread join!\n");
     intr_setenabled(0);
     current_thread->runstate = RS_READY;
     current_thread->yield_ct++;
