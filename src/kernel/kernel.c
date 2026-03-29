@@ -92,6 +92,9 @@ int kernel_main(void)
     init_driver_tty();
     init_driver_cpiofs();
 
+    /* Mount init ramdisk. */
+    mount_initrd();
+    
     /* Init the IRQ handler */
     init_int_controller();
 
@@ -100,9 +103,7 @@ int kernel_main(void)
 
     /* Enable interrupt */
     intr_setenabled(1);
-
-    /* Mount init ramdisk. */
-    mount_initrd();
+    
 
     /* Start shell. */
     kshell_init_run();
