@@ -87,6 +87,11 @@ int kernel_main(void)
     init_cpu();
     init_pm();
 
+    /* Init more essential drivers. */
+    init_driver_ramdisk();
+    init_driver_tty();
+    init_driver_cpiofs();
+
     /* Init the IRQ handler */
     init_int_controller();
 
@@ -95,11 +100,6 @@ int kernel_main(void)
 
     /* Enable interrupt */
     intr_setenabled(1);
-
-    /* Init more essential drivers. */
-    init_driver_ramdisk();
-    init_driver_tty();
-    init_driver_cpiofs();
 
     /* Mount init ramdisk. */
     mount_initrd();
