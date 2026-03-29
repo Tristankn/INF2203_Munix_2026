@@ -56,7 +56,6 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
     /* Handle IRQ. */
     switch (irq) {
     case IRQ_TIMER:
-        pr_info("Inside switch case IRQ_TIMER!\n");
         thread_preempt();
         pic_send_eoi(irq);
         break;
@@ -76,8 +75,6 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
 void interrupt_dispatch(ivec_t ivec, struct intrdata *idata)
 {
     pr_debug("interrupt %d (%s)\n", ivec, ivec_name(ivec));
-    pr_info("\nInterrupt_dispatch ble kalt!\n");
-
     if (ivec_isexception(ivec)) return handle_exception(ivec, idata);
 
     if (IVEC_IRQ_0 <= ivec && ivec < IVEC_IRQ_0 + IRQ_MAX)

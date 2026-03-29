@@ -62,8 +62,7 @@ cpu_task_restore:
 
 	/* Restore the return adress */
 	mov 20(%ecx), %edx		
-	/* Allocate space for a return adress on the stack */
-    sub $4, %esp			
+	
 	/* Add the return adress to the stack */
     mov %edx, (%esp)	
 
