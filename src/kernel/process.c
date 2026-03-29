@@ -6,6 +6,7 @@
 #include <abi.h>
 #include <cpu.h>
 #include <cpu_pagemap.h>
+#include <cpu_interrupt.h>
 
 #include <drivers/fileformat/elf.h>
 #include <drivers/log.h>
@@ -396,12 +397,21 @@ int thread_join(pid_t tid)
 
 int thread_yield(void)
 {
+    intr_setenabled(0);
+    current_thread->runstate = RS_READY;
+    current_thread->yield_ct++;
     schedule();
+    intr_setenabled(1);
     return 0;
 }
 
 int thread_preempt(void)
 {
-    TODO();
-    return -ENOSYS;
+    intr_setenabled(0);
+    current_thread->runstate = RS_READY;
+    current_thread->preempt_ct++;
+    schedule();
+
+    intr_setenabled(1);
+    return 0;
 }

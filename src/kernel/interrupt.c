@@ -57,7 +57,8 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
     switch (irq) {
     case IRQ_TIMER:
         pr_info("Inside switch case IRQ_TIMER!\n");
-        schedule();
+        thread_preempt();
+        pic_send_eoi(irq);
         break;
 
     default: {
