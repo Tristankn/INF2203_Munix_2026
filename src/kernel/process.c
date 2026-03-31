@@ -308,6 +308,8 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
 
     /* Set target kernel stack for incoming thread. */
     cpu_user_kstack_set(incoming->thread_stack);
+
+    // intr_setenabled(1);
     
     /* No outgoing thread or successful save of outgoing thread.
     * Now switch to incoming thread. */
@@ -320,6 +322,8 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
        break;
        case RS_READY:
        cpu_task_restore(&incoming->saved_state, 1);
+    //    intr_setenabled(1);
+
        /* No return. */
        
        default:
@@ -341,7 +345,6 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     }
 
     int idx = new_thread - tcb;
-    
     /* Set correct arguments*/
     new_thread->process = p;
     new_thread->thread_stack = (uintptr_t)kstacks[idx] + KSTACKSZ;
@@ -408,11 +411,11 @@ int thread_yield(void)
 
 int thread_preempt(void)
 {
-    intr_setenabled(0);
+    // intr_setenabled(0);
     current_thread->runstate = RS_READY;
     current_thread->preempt_ct++;
     schedule();
 
-    intr_setenabled(1);
+    // intr_setenabled(1);
     return 0;
 }

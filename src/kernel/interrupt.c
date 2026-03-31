@@ -13,6 +13,7 @@
 #include <core/errno.h>
 #include <core/sprintf.h>
 
+
 static void handle_exception(ivec_t ivec, struct intrdata *idata)
 {
     const int dbgsz = 256;
@@ -56,7 +57,9 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
     /* Handle IRQ. */
     switch (irq) {
     case IRQ_TIMER:
+        pr_info(("\n ------------- TIMER IRQ ------------------- \n"));
         thread_preempt();
+        //need_resched = 1;
         pic_send_eoi(irq);
         break;
 

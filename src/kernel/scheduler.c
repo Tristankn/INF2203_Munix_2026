@@ -76,7 +76,6 @@ void schedule(void)
     
     if (current_thread && current_thread->runstate == RS_READY)
         list_add_tail(&current_thread->queue, &ready_queue);
-
     /* Choose next thread and switch to it. */
     struct thread *next = choose_next_thread();
     sched_remove(next);
