@@ -6,6 +6,7 @@
 #include <abi.h>
 #include <boot.h>
 #include <cpu.h>
+#include <cpu_interrupt.h>
 
 #include <drivers/devices.h>
 #include <drivers/fileformat/ascii.h>
@@ -86,9 +87,6 @@ int kernel_main(void)
     init_cpu();
     init_pm();
 
-    // TODO: Initialize timer interrupt
-    //init_timer_interrupt();
-
     /* Init more essential drivers. */
     init_driver_ramdisk();
     init_driver_tty();
@@ -96,6 +94,16 @@ int kernel_main(void)
 
     /* Mount init ramdisk. */
     mount_initrd();
+    
+    /* Init the IRQ handler */
+    init_int_controller();
+
+    /* Init the timer */
+    init_timer_interrupt();
+
+    /* Enable interrupt */
+    intr_setenabled(1);
+    
 
     /* Start shell. */
     kshell_init_run();

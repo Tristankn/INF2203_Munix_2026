@@ -6,6 +6,7 @@
 #include <abi.h>
 #include <cpu.h>
 #include <cpu_pagemap.h>
+#include <cpu_interrupt.h>
 
 #include <drivers/fileformat/elf.h>
 #include <drivers/log.h>
@@ -262,6 +263,7 @@ _Noreturn void process_exit(int status)
     pr_info("process %d (%s) exited with status %d\n", current_process->pid,
             current_process->name, status);
     process_close(current_process);
+    current_thread->runstate = RS_EXITED;
     kernel_noreturn();
 }
 
@@ -285,6 +287,21 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
             incoming->process->name
     );
 
+    
+    
+    /* Low-level save/restore. */
+    if (outgoing && cpu_task_save(&outgoing->saved_state) != 0) {
+        /* Non-zero return value indicates that we are resuming
+        * a saved thread. Return from here and follow saved thread's
+        * return path to where it yielded or was interrupted. */
+       pr_trace("%d (%s) resumed\n", outgoing->tid, outgoing->process->name);
+       return 0;
+    } else if (outgoing) {
+        /* Zero return value indicates that the outgoing thread was
+        * saved successfully. Continue to restoring incoming thread. */
+       pr_trace("%d (%s) saved\n", outgoing->tid, outgoing->process->name);
+    }
+
     /* Set current thread and set kstack on interrupt. */
     current_thread  = incoming;
     current_process = incoming->process;
@@ -292,41 +309,30 @@ int thread_switch(struct thread *outgoing, struct thread *incoming)
     /* Set target kernel stack for incoming thread. */
     cpu_user_kstack_set(incoming->thread_stack);
 
-
-
-    /* Low-level save/restore. */
-    if (outgoing && cpu_task_save(&outgoing->saved_state) != 0) {
-        /* Non-zero return value indicates that we are resuming
-         * a saved thread. Return from here and follow saved thread's
-         * return path to where it yielded or was interrupted. */
-        pr_trace("%d (%s) resumed\n", outgoing->tid, outgoing->process->name);
-        return 0;
-    } else if (outgoing) {
-        /* Zero return value indicates that the outgoing thread was
-         * saved successfully. Continue to restoring incoming thread. */
-        pr_trace("%d (%s) saved\n", outgoing->tid, outgoing->process->name);
-    }
-
+    // intr_setenabled(1);
+    
     /* No outgoing thread or successful save of outgoing thread.
-     * Now switch to incoming thread. */
-    switch (incoming->runstate) {
-    case RS_NEW:
-        /* Update run state and launch thread */
-        incoming->runstate = RS_READY;
-        cpu_user_start(incoming->start_addr,incoming->process_stack);
+    * Now switch to incoming thread. */
+   switch (incoming->runstate) {
+       case RS_NEW:
+       /* Update run state and launch thread */
+       incoming->runstate = RS_READY;
+       cpu_user_start(incoming->start_addr,incoming->process_stack);
+       
+       break;
+       case RS_READY:
+       cpu_task_restore(&incoming->saved_state, 1);
+    //    intr_setenabled(1);
 
-        break;
-    case RS_READY:
-        cpu_task_restore(&incoming->saved_state, 1);
-        /* No return. */
-
-    default:
-        pr_error(
-                "%s: incoming thread %d (%s) has non-run state %d\n", __func__,
-                incoming->tid, incoming->process->name, incoming->runstate
+       /* No return. */
+       
+       default:
+       pr_error(
+           "%s: incoming thread %d (%s) has non-run state %d\n", __func__,
+           incoming->tid, incoming->process->name, incoming->runstate
         );
     }
-
+    
     kernel_noreturn();
 }
 
@@ -339,7 +345,6 @@ int thread_create(struct process *p, uintptr_t start_addr, uintptr_t ustack)
     }
 
     int idx = new_thread - tcb;
-    
     /* Set correct arguments*/
     new_thread->process = p;
     new_thread->thread_stack = (uintptr_t)kstacks[idx] + KSTACKSZ;
@@ -388,7 +393,6 @@ int thread_join(pid_t tid)
     }
 
 
-    pr_info("thread join finished!");
     int status = temp->exit_status; /*save the exit status before closing*/
         thread_close(temp);
     return (status);
@@ -397,12 +401,21 @@ int thread_join(pid_t tid)
 
 int thread_yield(void)
 {
+    intr_setenabled(0);
+    current_thread->runstate = RS_READY;
+    current_thread->yield_ct++;
     schedule();
+    intr_setenabled(1);
     return 0;
 }
 
 int thread_preempt(void)
 {
-    TODO();
-    return -ENOSYS;
+    // intr_setenabled(0);
+    current_thread->runstate = RS_READY;
+    current_thread->preempt_ct++;
+    schedule();
+
+    // intr_setenabled(1);
+    return 0;
 }

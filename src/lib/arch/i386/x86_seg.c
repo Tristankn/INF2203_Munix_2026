@@ -356,7 +356,7 @@ noreturn void cpu_user_start(uintptr_t start_addr, uintptr_t ustack_addr)
     dataseg = X86_SEGSEL_INIT(KSEG_USER_DATA, PL_USER);
 
     ureg_t flags = 0;
-    //flags |= (1 << 9); // Enable interrupts in user space.
+    flags |= (1 << 9); // Enable interrupts in user space. -- uncommented line to enable interrupts
 
     /* On i386, the easiest way to switch to a lower privilege level
      * is to return from an interrupt.

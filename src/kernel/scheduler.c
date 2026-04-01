@@ -56,6 +56,7 @@ static struct thread *choose_next_thread(void)
 
         switch (t->runstate) {
         case RS_NEW:
+            return t;
         case RS_READY: return t;
         default:
             pr_debug(
@@ -75,11 +76,9 @@ void schedule(void)
     
     if (current_thread && current_thread->runstate == RS_READY)
         list_add_tail(&current_thread->queue, &ready_queue);
-
     /* Choose next thread and switch to it. */
     struct thread *next = choose_next_thread();
     sched_remove(next);
     thread_switch(current_thread, next);
-
 }
 

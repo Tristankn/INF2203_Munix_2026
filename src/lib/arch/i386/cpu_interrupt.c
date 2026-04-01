@@ -135,7 +135,7 @@ ISR_E(11, isr11); ///< Handler for x86 \#NP Segment Not Present
 ISR_E(12, isr12); ///< Handler for x86 \#SS Stack-Segment Fault
 ISR_E(13, isr13); ///< Handler for x86 \#GP General Protection Fault
 ISR_E(14, isr14); ///< Handler for x86 \#PF Page Fault
-//ISR(IVEC_IRQ_0 + IRQ_TIMER, isr_irq0); ///< Handler for IRQ 0 (Timer)
+ISR(IVEC_IRQ_0 + IRQ_TIMER, isr_irq0); ///< Handler for IRQ 0 (Timer)
 
 /** Interrupt handler functions to install into the IDT. */
 static const struct handler_to_install HANDLERS[] = {
@@ -147,7 +147,7 @@ static const struct handler_to_install HANDLERS[] = {
         {12, isr12},                        /// Stack-Segment Fault
         {13, isr13},                        /// General Protection Fault
         {14, isr14},                        /// Page Fault
-//{IVEC_IRQ_0 + IRQ_TIMER, isr_irq0}, /// IRQ 0: Timer
+        {IVEC_IRQ_0 + IRQ_TIMER, isr_irq0}, /// IRQ 0: Timer
 };
 
 /* The kernel will provide a syscall entry interrupt handler. */
