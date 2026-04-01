@@ -57,10 +57,10 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
     /* Handle IRQ. */
     switch (irq) {
     case IRQ_TIMER:
+        pic_send_eoi(irq);
         pr_info(("\n ------------- TIMER IRQ ------------------- \n"));
         thread_preempt();
         //need_resched = 1;
-        pic_send_eoi(irq);
         break;
 
     default: {
