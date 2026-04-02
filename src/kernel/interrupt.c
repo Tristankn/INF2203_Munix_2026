@@ -58,7 +58,7 @@ static void handle_irq(ivec_t ivec, struct intrdata *idata)
     switch (irq) {
     case IRQ_TIMER:
         pic_send_eoi(irq);
-        pr_info(("\n ------------- TIMER IRQ ------------------- \n"));
+        //pr_info(("\n ------------- TIMER IRQ ------------------- \n"));
         thread_preempt();
         //need_resched = 1;
         break;

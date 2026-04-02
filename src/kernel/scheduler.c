@@ -33,7 +33,9 @@ void sched_add(struct thread *t)
 void sched_remove(struct thread *t)
 {
     /* Remove thread from scheduling. */
-    list_del(&t->queue);
+    if(t->queue.next && t->queue.prev){
+        list_del(&t->queue);
+    };
 }
 
 static struct thread *choose_next_thread(void)
@@ -71,7 +73,7 @@ static struct thread *choose_next_thread(void)
 
 void schedule(void)
 {
-    pr_info("[SCHED] picking next thread...\n");
+    //pr_info("[SCHED] picking next thread...\n");
     /* If there is a current thread running, put it back in the ready queue. */
     
     if (current_thread && current_thread->runstate == RS_READY)
