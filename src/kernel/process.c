@@ -47,8 +47,13 @@ static void thread_close(struct thread *t)
     pr_debug("destroying thread %d (%s)\n", t->tid, t->process->name);
 
     /* Remove from lists. */
-    list_del(&t->process_threads);
-    list_del(&t->queue);
+    if(t->process_threads.next && t->process_threads.prev){
+        list_del(&t->process_threads);
+    }
+
+    if(t->queue.next && t->queue.prev){
+        list_del(&t->queue);
+    }
 
     /* Clear struct. */
     *t = (struct thread){};
@@ -367,8 +372,6 @@ _Noreturn void thread_exit(int status)
     current_thread->exit_status = status; /* Setting exit status for current thread*/
     current_thread->runstate = RS_EXITED;   /*Setting the runstate to RS_EXITED*/
 
-    sched_remove(current_thread); /*Remove the current thread from scheduler*/
-
 
     schedule(); /*move to next scheduled thread*/
     kernel_noreturn();
@@ -401,11 +404,9 @@ int thread_join(pid_t tid)
 
 int thread_yield(void)
 {
-    intr_setenabled(0);
     current_thread->runstate = RS_READY;
     current_thread->yield_ct++;
     schedule();
-    intr_setenabled(1);
     return 0;
 }
 
