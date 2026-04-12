@@ -35,7 +35,6 @@ static struct _thrd *thrd_alloc(void)
 {
     for (size_t i = 0; i < THRD_MAX; i++)
         if (!atomic_flag_test_and_set(&uthrds[i].inuse)) return &uthrds[i];
-
     return NULL;
 }
 
@@ -143,35 +142,37 @@ int mtx_init(mtx_t *mutex, int type)
 {
     /* TODO */
     (void) mutex;
-    (void) type;
+    atomic_flag_clear(&mutex->mtx_lock); /* initialized to unlocked = 0 */
     return thrd_success;
 }
 
 void mtx_destroy(mtx_t *mutex)
 {
-    /* TODO */
-    (void) mutex;
+    (void) mutex; /*void the mutex to destroy*/
     return;
 }
 
 int mtx_trylock(mtx_t *mutex)
 {
-    /* TODO */
-    (void) mutex;
-    return thrd_success;
+
+    if(!atomic_flag_test_and_set(&mutex->mtx_lock)){
+        return thrd_success;
+    }
+        return thrd_busy;
+    
 }
 
 int mtx_lock(mtx_t *mutex)
 {
-    /* TODO */
-    (void) mutex;
+    while (atomic_flag_test_and_set(&mutex->mtx_lock)){
+        thrd_yield(); /* while flag returns 1, yield until atomic lock is returning 0 to continue*/
+    }
     return thrd_success;
 }
 
 int mtx_unlock(mtx_t *mutex)
 {
-    /* TODO */
-    (void) mutex;
+    atomic_flag_clear(&mutex->mtx_lock);
     return thrd_success;
 }
 

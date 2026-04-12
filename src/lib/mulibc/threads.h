@@ -38,6 +38,7 @@ void thrd_yield(void);
 /* === Mutexes === */
 
 struct _mtx {
+    atomic_flag mtx_lock;
     /* TODO: Design Mutex struct */
 };
 
